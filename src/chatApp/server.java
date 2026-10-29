@@ -7,26 +7,34 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-public class server extends JFrame implements ActionListener {
+public class server implements ActionListener {
 
     JTextField text;
     JPanel al;
-    Box vertical = Box.createVerticalBox();
+    static Box vertical = Box.createVerticalBox();
+    static DataOutputStream dout;
+
+    static JFrame f = new JFrame();
 
     server() {
-        setTitle("Chat App");
-        setVisible(true);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(null);
+        f.setTitle("Chat App");
+        f.setVisible(true);
+        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        f.setLayout(null);
 
         JPanel pl = new JPanel();
         pl.setBackground(new Color(7,94,89));
         pl.setBounds(0,0,450,70);
         pl.setLayout(null);
-        add(pl);
+        f.add(pl);
 
         ImageIcon i1 = new ImageIcon(ClassLoader.getSystemResource("icons/3.png"));
         Image i2 = i1.getImage().getScaledInstance(25,25,Image.SCALE_DEFAULT);
@@ -75,7 +83,7 @@ public class server extends JFrame implements ActionListener {
         name.setForeground(Color.white);
         pl.add(name);
 
-        JLabel status = new JLabel("Gaintonde");
+        JLabel status = new JLabel("Active");
         status.setBounds(110,35,100,18);
         status.setFont(new Font("SAN_SERIF",Font.BOLD,14));
         status.setForeground(Color.white);
@@ -83,12 +91,12 @@ public class server extends JFrame implements ActionListener {
 
         al = new JPanel();
         al.setBounds(5,75,440,570);
-        add(al);
+        f.add(al);
 
         text = new JTextField();
         text.setBounds(5,655,310,40);
         text.setFont(new Font("SAN_SERIF",Font.BOLD,16));
-        add(text);
+        f.add(text);
 
         JButton send = new JButton("Send");
         send.setBounds(320,655,123,40);
@@ -96,35 +104,41 @@ public class server extends JFrame implements ActionListener {
         send.setForeground(Color.white);
         send.setFont(new Font("SAN_SERIF",Font.BOLD,16));
         send.addActionListener(this);
-        add(send);
+        f.add(send);
 
-        setSize(460,735);
-        setLocation(200,50);
-        getContentPane().setBackground(Color.WHITE);
+        f.setSize(460,735);
+        f.setLocation(200,50);
+        f.getContentPane().setBackground(Color.WHITE);
     }
 
     public void actionPerformed(ActionEvent e){
-        String msg = text.getText();
+        try {
+            String msg = text.getText();
 
-        if(msg.equals("")){
-            return;
+            if (msg.equals("")) {
+                return;
+            }
+            JPanel p2 = formatLabel(msg);
+
+            al.setLayout(new BorderLayout());
+
+            JPanel right = new JPanel(new BorderLayout());
+            right.add(p2, BorderLayout.LINE_END);
+            vertical.add(right);
+            vertical.add(Box.createVerticalStrut(15));
+
+            al.add(vertical, BorderLayout.PAGE_START);
+
+            dout.writeUTF(msg);
+
+            f.repaint();
+            f.invalidate();
+            f.validate();
+
+            text.setText("");
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
-        JPanel p2 = formatLabel(msg);
-
-        al.setLayout(new BorderLayout());
-
-        JPanel right = new JPanel(new BorderLayout());
-        right.add(p2, BorderLayout.LINE_END);
-        vertical.add(right);
-        vertical.add(Box.createVerticalStrut(15));
-
-        al.add(vertical, BorderLayout.PAGE_START);
-
-        repaint();
-        invalidate();
-        validate();
-
-        text.setText("");
     }
 
     public static JPanel formatLabel(String s){
@@ -152,5 +166,25 @@ public class server extends JFrame implements ActionListener {
 
     static void main(String[] args) {
         new server();
+
+        try{
+            ServerSocket skt = new ServerSocket(6001);
+            while (true){
+                Socket s = skt.accept();
+                DataInputStream din = new DataInputStream(s.getInputStream());
+                dout = new DataOutputStream(s.getOutputStream());
+                while (true){
+                    String msg = din.readUTF();
+                    JPanel p = formatLabel(msg);
+
+                    JPanel left = new JPanel(new BorderLayout());
+                    left.add(p, BorderLayout.LINE_START);
+                    vertical.add(left);
+                    f.validate();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
