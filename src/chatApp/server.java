@@ -1,14 +1,24 @@
 package chatApp;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
-public class server extends JFrame {
+public class server extends JFrame implements ActionListener {
+
+    JTextField text;
+    JPanel al;
+    Box vertical = Box.createVerticalBox();
 
     server() {
         setTitle("Chat App");
+        setVisible(true);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(null);
 
@@ -71,11 +81,11 @@ public class server extends JFrame {
         status.setForeground(Color.white);
         pl.add(status);
 
-        JPanel al = new JPanel();
+        al = new JPanel();
         al.setBounds(5,75,440,570);
         add(al);
 
-        JTextField text = new JTextField();
+        text = new JTextField();
         text.setBounds(5,655,310,40);
         text.setFont(new Font("SAN_SERIF",Font.BOLD,16));
         add(text);
@@ -85,15 +95,62 @@ public class server extends JFrame {
         send.setBackground(new Color(7,94,84));
         send.setForeground(Color.white);
         send.setFont(new Font("SAN_SERIF",Font.BOLD,16));
+        send.addActionListener(this);
         add(send);
 
         setSize(460,735);
-        setVisible(true);
         setLocation(200,50);
         getContentPane().setBackground(Color.WHITE);
     }
 
-    public static void main(String[] args) {
+    public void actionPerformed(ActionEvent e){
+        String msg = text.getText();
+
+        if(msg.equals("")){
+            return;
+        }
+        JPanel p2 = formatLabel(msg);
+
+        al.setLayout(new BorderLayout());
+
+        JPanel right = new JPanel(new BorderLayout());
+        right.add(p2, BorderLayout.LINE_END);
+        vertical.add(right);
+        vertical.add(Box.createVerticalStrut(15));
+
+        al.add(vertical, BorderLayout.PAGE_START);
+
+        repaint();
+        invalidate();
+        validate();
+
+        text.setText("");
+    }
+
+    public static JPanel formatLabel(String s){
+        JPanel p = new JPanel();
+        p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
+
+        JLabel mesgs = new JLabel("<html><p style=\"width: 150px\">"+s+"</p></html>");
+        mesgs.setFont(new Font("SAN_SERIF",Font.BOLD,16));
+        mesgs.setBackground(Color.GREEN);
+        mesgs.setForeground(Color.BLACK);
+        mesgs.setOpaque(true);
+        mesgs.setBorder(new EmptyBorder(15,15,15,50));
+
+        p.add(mesgs);
+
+        Calendar cal = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
+
+        JLabel time = new JLabel();
+        time.setText(sdf.format(cal.getTime()));
+        p.add(time);
+
+        return p;
+    }
+
+    static void main(String[] args) {
         new server();
     }
 }
