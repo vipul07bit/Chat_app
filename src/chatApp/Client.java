@@ -20,6 +20,7 @@ public class Client implements ActionListener {
     static JPanel al;
     static Box vertical = Box.createVerticalBox();
     static DataOutputStream dout;
+    JScrollPane scrollPane;
 
     static JFrame f = new JFrame();
 
@@ -89,12 +90,21 @@ public class Client implements ActionListener {
         pl.add(status);
 
         al = new JPanel();
-        al.setBounds(5,75,440,570);
-        f.add(al);
+        al.setLayout(new BorderLayout());
+
+        scrollPane = new JScrollPane(al);
+        scrollPane.setBounds(5, 75, 440, 570);
+
+        scrollPane.setVerticalScrollBarPolicy(
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
+        );
+
+        f.add(scrollPane);
 
         text = new JTextField();
         text.setBounds(5,655,310,40);
         text.setFont(new Font("SAN_SERIF",Font.BOLD,16));
+        text.addActionListener(this);
         f.add(text);
 
         JButton send = new JButton("Send");
@@ -108,13 +118,15 @@ public class Client implements ActionListener {
         f.setSize(460,735);
         f.setLocation(200,50);
         f.getContentPane().setBackground(Color.WHITE);
+
+        SwingUtilities.invokeLater(() -> text.requestFocusInWindow());
     }
 
     public void actionPerformed(ActionEvent e){
         try {
             String msg = text.getText();
 
-            if (msg.equals("")) {
+            if (msg.isEmpty()) {
                 return;
             }
             JPanel p2 = formatLabel(msg);
@@ -134,7 +146,10 @@ public class Client implements ActionListener {
             f.invalidate();
             f.validate();
 
+            scrollToBottom();
+
             text.setText("");
+            text.requestFocusInWindow();
         } catch (Exception ae){
             ae.printStackTrace();
         }
@@ -163,11 +178,18 @@ public class Client implements ActionListener {
         return p;
     }
 
+    private void scrollToBottom() {
+        SwingUtilities.invokeLater(() -> {
+            JScrollBar bar = scrollPane.getVerticalScrollBar();
+            bar.setValue(bar.getMaximum());
+        });
+    }
+
     static void main(String[] args) {
         new Client();
 
         try{
-            Socket s = new Socket("127.0.0.1",6001);
+            Socket s = new Socket("192.168.0.100",6001);
             DataInputStream din = new DataInputStream(s.getInputStream());
             dout = new DataOutputStream(s.getOutputStream());
 

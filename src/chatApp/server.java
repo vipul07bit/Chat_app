@@ -9,7 +9,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
@@ -21,6 +20,7 @@ public class server implements ActionListener {
     JPanel al;
     static Box vertical = Box.createVerticalBox();
     static DataOutputStream dout;
+    JScrollPane scrollPane;
 
     static JFrame f = new JFrame();
 
@@ -90,12 +90,21 @@ public class server implements ActionListener {
         pl.add(status);
 
         al = new JPanel();
-        al.setBounds(5,75,440,570);
-        f.add(al);
+        al.setLayout(new BorderLayout());
+
+        scrollPane = new JScrollPane(al);
+        scrollPane.setBounds(5, 75, 440, 570);
+
+        scrollPane.setVerticalScrollBarPolicy(
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
+        );
+
+        f.add(scrollPane);
 
         text = new JTextField();
         text.setBounds(5,655,310,40);
         text.setFont(new Font("SAN_SERIF",Font.BOLD,16));
+        text.addActionListener(this);
         f.add(text);
 
         JButton send = new JButton("Send");
@@ -109,13 +118,15 @@ public class server implements ActionListener {
         f.setSize(460,735);
         f.setLocation(200,50);
         f.getContentPane().setBackground(Color.WHITE);
+
+        SwingUtilities.invokeLater(() -> text.requestFocusInWindow());
     }
 
     public void actionPerformed(ActionEvent e){
         try {
             String msg = text.getText();
 
-            if (msg.equals("")) {
+            if (msg.isEmpty()) {
                 return;
             }
             JPanel p2 = formatLabel(msg);
@@ -135,7 +146,10 @@ public class server implements ActionListener {
             f.invalidate();
             f.validate();
 
+            scrollToBottom();
+
             text.setText("");
+            text.requestFocusInWindow();
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
@@ -162,6 +176,13 @@ public class server implements ActionListener {
         p.add(time);
 
         return p;
+    }
+
+    private void scrollToBottom() {
+        SwingUtilities.invokeLater(() -> {
+            JScrollBar bar = scrollPane.getVerticalScrollBar();
+            bar.setValue(bar.getMaximum());
+        });
     }
 
     static void main(String[] args) {
